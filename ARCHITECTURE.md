@@ -19,7 +19,7 @@ procedural models/textures/audio only. Plays offline from `game/index.html`.
   player distance), InstancedMesh for buildings/props/lamps/trees, canvas
   textures for windows/roads. Collision AABBs + spatial grid.
 - `game/src/entities.js` — procedural humanoid (player, peds) with limb
-  animation (idle/walk/run/shoot/fall) + 6 vehicle types (sedan, sports,
+  animation (idle/walk/run/shoot/fall) + 7 vehicle types (sedan, sports,
   SUV/truck, bus, police, motorcycle) with distinct procedural models,
   headlights/taillights, arcade physics (accel/brake/reverse/drift/tilt),
   damage states, smoke/fire/explosion.

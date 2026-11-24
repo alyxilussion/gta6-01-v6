@@ -379,6 +379,7 @@
   };
   FL.Vehicle.prototype.damage = function (amount) {
     if (this.dead) return;
+    amount = FL.sanitize(amount, 0); // a NaN impact would poison hp and skip the explosion
     this.hp -= amount;
     if (this.hp <= 0) {
       this.hp = 0; this.dead = true; this.burning = true;

@@ -552,6 +552,7 @@
       } else {
         world.evadeTimer += dt;
         world.seenTimer = 0;
+        // One star fades per 8 s spent hidden (no helicopter overhead).
         if (world.evadeTimer > 8) {
           world.wanted = Math.max(0, world.wanted - 1);
           world.evadeTimer = 0;

@@ -14,8 +14,16 @@ const here = dirname(fileURLToPath(import.meta.url));
 const vendorDir = join(here, 'game', 'vendor');
 mkdirSync(vendorDir, { recursive: true });
 
+// Fail fast with a clear message if three is not installed yet, instead of
+// letting esbuild die on a missing entry point.
+const threeEntry = join(here, 'node_modules', 'three', 'build', 'three.module.js');
+if (!existsSync(threeEntry)) {
+  console.error('three is not installed — run `npm install` first.');
+  process.exit(1);
+}
+
 await esbuild.build({
-  entryPoints: [join(here, 'node_modules', 'three', 'build', 'three.module.js')],
+  entryPoints: [threeEntry],
   bundle: true,
   format: 'iife',
   globalName: 'THREE',

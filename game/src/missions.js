@@ -169,7 +169,7 @@
     FL.audio.mission();
     M.game.addMoney(def.reward);
     FL.emit('mission-complete', { mission: def, reward: def.reward });
-    FL.emit('notif', 'Misi selesai! +$' + def.reward);
+    FL.emit('notif', 'Misi selesai! +' + FL.fmtMoney(def.reward));
     if (def.unlock) FL.emit('notif', 'Unlock: ' + def.unlock);
     M.current = -1;
     M.game.saveGame();

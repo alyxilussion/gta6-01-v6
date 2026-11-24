@@ -99,6 +99,7 @@
     return '$' + Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   };
   FL.fmtTime = function (s) {
+    s = FL.sanitize(s, 0); // a NaN timer would render as "NaN:NaN" on the HUD
     s = Math.max(0, Math.ceil(s));
     return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2);
   };

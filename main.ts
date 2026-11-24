@@ -32,6 +32,11 @@ function clearContents(dir) {
 }
 
 clearContents(out);
+// Fail fast if the entrypoint page is missing: a game without index.html
+// would copy fine and then play nothing.
+if (!existsSync(join(here, 'game', 'index.html'))) {
+  throw new Error('game/index.html is missing — the entry would not run');
+}
 cpSync(join(here, 'game'), join(out, 'game'), { recursive: true });
 mkdirSync(join(out, 'screenshots'), { recursive: true });
 if (existsSync(join(here, 'screenshots'))) cpSync(join(here, 'screenshots'), join(out, 'screenshots'), { recursive: true });

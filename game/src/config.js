@@ -8,6 +8,9 @@
   FL.CFG = {
     citySize: 640,          // world is citySize x citySize metres (square)
     blockSize: 64,          // one city block (road centre to road centre)
+    // Roads run at (n + 0.5) * blockSize, i.e. x/z = ±32, ±96, ±160, ±224,
+    // ±288; blocks sit between them, centred on multiples of 64. Every fixed
+    // point the player must reach sits ON a road, never on a block centre.
     roadWidth: 12,
     sidewalkWidth: 3,
     chunkSize: 160,         // streaming chunk (2.5 blocks)

@@ -220,7 +220,7 @@
         ' | Gangs: ' + FL.world.gangs.length +
         '<br>Pos: ' + p.position.x.toFixed(0) + ', ' + p.position.z.toFixed(0) +
         ' | Wanted: ' + FL.world.wanted +
-        '<br>Errors: ' + FL.errors.length + (FL.errors.length ? ' — ' + FL.errors[FL.errors.length - 1].msg : '');
+        '<br>Errors: ' + FL.errors.length + (FL.errors.length ? ' — ' + FL.errors[FL.errors.length - 1] : '');
     } else if (H.els['debug-overlay']) {
       H.els['debug-overlay'].style.display = 'none';
     }

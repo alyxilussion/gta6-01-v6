@@ -611,6 +611,8 @@
     }
     if (!playerPos) return;
     var now = performance.now();
+    // Visibility is re-checked at most twice a second: toggling group.visible
+    // is cheap, but the player cannot cross a 160 m chunk any faster.
     if (now - lastChunkUpdate < 500) return;
     lastChunkUpdate = now;
     var pci = Math.floor((playerPos.x + HALF) / CFG.chunkSize);

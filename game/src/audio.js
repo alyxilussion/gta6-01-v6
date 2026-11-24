@@ -125,6 +125,7 @@
     },
     engineSet: function (speed01, on) {
       if (!engineNodes) return;
+      speed01 = FL.clamp(FL.sanitize(speed01, 0), 0, 1); // a NaN pitch would throw inside setTargetAtTime
       try {
         var t = ctx.currentTime;
         engineNodes.osc.frequency.setTargetAtTime(50 + speed01 * 160, t, 0.08);

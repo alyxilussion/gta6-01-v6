@@ -19,7 +19,7 @@ lighthouse. You play **Mara Voss**, driver of the Whiteout Crew. Eight chained
 missions with cinematic dialogue, then free roam:
 
 1. **Meet Kai** — find Kai at the downtown garage.
-2. **Steal a Car** — take any parked or slow car (press F beside it).
+2. **Steal a Car** — take any parked or slow car (press E beside it).
 3. **The Drop** — grab the package off the harbor causeway.
 4. **Lose the Heat** — shake a 3-star wanted level.
 5. **The Rooftop** — a firefight above the neon.
@@ -63,7 +63,8 @@ carjackings, and outrunning the law.
 | --- | ------ |
 | WASD / arrows | Move on foot, drive |
 | Mouse | Look (pointer lock) |
-| F / E | Enter / leave a car |
+| E | Enter / leave a car |
+| F | Carjack an occupied car |
 | Left click | Shoot (on foot) |
 | R | Reload / flip a flipped car (hold) |
 | Space | Jump (on foot) / handbrake (driving) |
@@ -71,7 +72,7 @@ carjackings, and outrunning the law.
 | M | Full-screen map |
 | P / Esc | Pause |
 | C | Look behind (driving) |
-| H | Horn |
+| H | Show controls overlay |
 | F3 | Debug overlay |
 
 ## Run it

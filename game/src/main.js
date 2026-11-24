@@ -889,6 +889,8 @@
       game.acc -= FIXED;
       steps++;
     }
+    // Spiral-of-death guard: if 5 fixed steps still leave backlog (a very
+    // slow frame), drop it rather than run more steps and fall further behind.
     if (steps === 5) game.acc = 0;
     FL.guard('camera', function () { updateCamera(dt); });
     FL.guard('hud', function () { FL.hud.update(dt, game); });

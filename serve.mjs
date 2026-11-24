@@ -10,7 +10,7 @@ const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/cs
 const server = createServer(async (req, res) => {
   try {
     const url = new URL(req.url, 'http://localhost');
-    let path = url.pathname === '/' ? '/index.html' : url.pathname;
+    let path = decodeURIComponent(url.pathname === '/' ? '/index.html' : url.pathname);
     const file = join(root, path);
     if (!file.startsWith(root)) { res.writeHead(403); res.end('Forbidden'); return; }
     const data = await readFile(file);
