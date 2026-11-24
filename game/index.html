@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FROSTLINE 3D — Neon Harbor</title>
+<style>
+  html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #05070f; }
+  #game { display: block; width: 100vw; height: 100vh; }
+  #webgl-error { position: fixed; inset: 0; display: none; place-items: center; color: #cfe6ff;
+    font: 16px/1.6 system-ui, sans-serif; text-align: center; padding: 24px; background: #05070f; z-index: 50; }
+  #vignette { position: fixed; inset: 0; pointer-events: none; z-index: 5;
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,10,.55) 100%); }
+  #hud { position: fixed; inset: 0; pointer-events: none; z-index: 10; font-family: 'Segoe UI', system-ui, sans-serif; color: #fff; }
+  .hud-box { position: absolute; background: rgba(5,10,22,.55); border: 1px solid rgba(120,200,255,.25);
+    border-radius: 8px; padding: 8px 12px; backdrop-filter: blur(2px); }
+  #hud-top-right { top: 12px; right: 12px; text-align: right; }
+  #stars { font-size: 22px; letter-spacing: 2px; color: #ffd75e; text-shadow: 0 0 8px rgba(255,200,60,.8); }
+  #stars.flash { animation: starflash .5s steps(2) infinite; }
+  @keyframes starflash { 50% { opacity: .25; } }
+  #money { font-size: 20px; font-weight: 700; color: #7dff9a; }
+  #radio { font-size: 12px; color: #9fd8ff; }
+  #hud-bottom-left { left: 12px; bottom: 12px; min-width: 220px; }
+  #health-bar, #armor-bar { height: 10px; background: rgba(255,255,255,.15); border-radius: 5px; overflow: hidden; margin: 3px 0 6px; }
+  #health-fill { height: 100%; width: 100%; background: linear-gradient(90deg,#ff5a5a,#ff8a5a); }
+  #armor-fill { height: 100%; width: 0%; background: linear-gradient(90deg,#5aa8ff,#7dd8ff); }
+  #weapon { font-size: 15px; font-weight: 600; }
+  #ammo { font-size: 13px; color: #cfe6ff; }
+  #speedo { right: 12px; bottom: 12px; text-align: right; }
+  #speed-value { font-size: 30px; font-weight: 800; }
+  #gear-value { font-size: 13px; color: #9fd8ff; }
+  #objective { top: 12px; left: 50%; transform: translateX(-50%); text-align: center; max-width: 60vw; }
+  #objective-text { font-size: 15px; font-weight: 600; }
+  #objective-sub { font-size: 12px; color: #bfe3ff; }
+  #prompt { left: 50%; bottom: 120px; transform: translateX(-50%); font-size: 15px; font-weight: 600;
+    background: rgba(5,10,22,.7); padding: 8px 16px; border-radius: 20px; border: 1px solid rgba(255,255,255,.3); display: none; }
+  #notif { left: 50%; top: 90px; transform: translateX(-50%); font-size: 15px; font-weight: 700;
+    color: #ffe08a; text-shadow: 0 0 10px rgba(255,200,60,.6); display: none; }
+  #minimap-wrap { position: absolute; left: 12px; top: 12px; width: 200px; height: 200px; border-radius: 50%;
+    overflow: hidden; border: 2px solid rgba(120,200,255,.5); box-shadow: 0 0 18px rgba(0,150,255,.35); background: #0a1428; }
+  #minimap { width: 200px; height: 200px; display: block; }
+  #crosshair { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); font-size: 22px;
+    color: rgba(255,255,255,.9); text-shadow: 0 0 6px #000; display: none; }
+  #damage-flash { position: fixed; inset: 0; pointer-events: none; z-index: 9; opacity: 0;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(255,0,0,.5) 100%); }
+  #letterbox-top, #letterbox-bottom { position: fixed; left: 0; right: 0; height: 0; background: #000; z-index: 20;
+    transition: height .5s ease; }
+  #letterbox-top { top: 0; } #letterbox-bottom { bottom: 0; }
+  #subtitle { position: fixed; left: 50%; bottom: 110px; transform: translateX(-50%); z-index: 21; display: none;
+    text-align: center; max-width: 70vw; font-size: 19px; font-weight: 600; color: #fff;
+    text-shadow: 0 2px 6px #000; background: rgba(0,0,0,.45); padding: 8px 18px; border-radius: 8px; }
+  #subtitle .speaker { color: #ffd75e; }
+  #menu { position: fixed; inset: 0; z-index: 30; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; color: #fff; text-align: center;
+    background: linear-gradient(180deg, rgba(3,6,18,.25) 0%, rgba(3,6,18,.78) 70%, rgba(3,6,18,.92) 100%); }
+  #menu h1 { font-size: 64px; margin: 0; letter-spacing: 6px; color: #dff3ff;
+    text-shadow: 0 0 30px rgba(80,200,255,.9), 0 0 80px rgba(180,80,255,.6); font-weight: 900; }
+  #menu h2 { font-size: 20px; margin: 4px 0 26px; color: #9fd8ff; letter-spacing: 4px; font-weight: 400; }
+  .menu-btn { pointer-events: auto; cursor: pointer; font-size: 18px; color: #eaf7ff; background: rgba(10,25,55,.75);
+    border: 1px solid rgba(120,200,255,.5); border-radius: 10px; padding: 12px 34px; margin: 6px; min-width: 260px;
+    font-family: inherit; }
+  .menu-btn:hover, .menu-btn:focus { background: rgba(40,110,200,.85); outline: none; }
+  #menu-tip { margin-top: 22px; font-size: 13px; color: #9fb8d8; max-width: 520px; line-height: 1.6; }
+  #menu-settings { display: none; margin-top: 10px; font-size: 14px; color: #cfe6ff; line-height: 2; }
+  #menu-settings input[type=range] { width: 160px; }
+  #menu-settings select { background: #0a1a33; color: #fff; border: 1px solid #3a6ea5; border-radius: 4px; }
+  #pause-menu { position: fixed; inset: 0; z-index: 30; display: none; flex-direction: column; align-items: center;
+    justify-content: center; color: #fff; background: rgba(3,6,18,.72); }
+  #pause-menu h1 { font-size: 40px; letter-spacing: 4px; }
+  #map-screen { position: fixed; inset: 0; z-index: 30; display: none; background: rgba(3,6,18,.92); color: #fff; }
+  #map-screen h2 { text-align: center; margin: 14px 0 6px; letter-spacing: 3px; }
+  #map-canvas { display: block; margin: 0 auto; border: 1px solid rgba(120,200,255,.5); cursor: crosshair; max-width: 94vw; max-height: 82vh; }
+  #map-hint { text-align: center; font-size: 13px; color: #9fd8ff; margin-top: 8px; }
+  #end-screen { position: fixed; inset: 0; z-index: 40; display: none; flex-direction: column; align-items: center;
+    justify-content: center; color: #fff; background: rgba(10,0,0,.55); }
+  #end-screen h1 { font-size: 84px; letter-spacing: 10px; margin: 0; text-shadow: 0 0 40px rgba(255,60,60,.9); }
+  #end-screen p { font-size: 18px; color: #ffd9d9; }
+  #loading { position: fixed; inset: 0; z-index: 45; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; color: #cfe6ff; background: #05070f; }
+  #loading h1 { font-size: 34px; letter-spacing: 5px; color: #dff3ff; }
+  #loading-bar { width: 320px; height: 10px; background: rgba(255,255,255,.12); border-radius: 5px; overflow: hidden; margin: 16px 0; }
+  #loading-fill { height: 100%; width: 0%; background: linear-gradient(90deg,#3aa0ff,#b45cff); }
+  #loading-tip { font-size: 13px; color: #8fb4d8; max-width: 460px; text-align: center; line-height: 1.6; }
+  #debug-overlay { position: fixed; left: 8px; top: 220px; z-index: 15; display: none; color: #8fff9a;
+    font: 12px/1.5 monospace; background: rgba(0,20,10,.6); padding: 8px; border-radius: 6px; white-space: pre; }
+  #controls-overlay { position: fixed; right: 12px; top: 220px; z-index: 15; display: none; color: #cfe6ff;
+    font: 12px/1.7 system-ui, sans-serif; background: rgba(5,10,22,.7); padding: 10px 14px; border-radius: 8px; }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="vignette"></div>
+<div id="damage-flash"></div>
+<div id="letterbox-top"></div><div id="letterbox-bottom"></div>
+<div id="subtitle"></div>
+<div id="hud">
+  <div id="minimap-wrap"><canvas id="minimap" width="200" height="200"></canvas></div>
+  <div id="hud-top-right" class="hud-box"><div id="stars">☆☆☆☆☆</div><div id="money">$0</div><div id="radio">NEON FM 101.1</div></div>
+  <div id="objective" class="hud-box"><div id="objective-text">Welcome to Neon Harbor</div><div id="objective-sub">Follow the yellow beam</div><div id="timer-text" style="display:none;font-size:13px;color:#ffb0b0;font-weight:700"></div></div>
+  <div id="hud-bottom-left" class="hud-box">
+    <div>HEALTH</div><div id="health-bar"><div id="health-fill"></div></div>
+    <div>ARMOR</div><div id="armor-bar"><div id="armor-fill"></div></div>
+    <div id="weapon">Fists</div><div id="ammo"></div>
+  </div>
+  <div id="speedo" class="hud-box" style="display:none"><div id="speed-value">0</div><div id="gear-value">km/h · D</div></div>
+  <div id="prompt"></div>
+  <div id="notif"></div>
+  <div id="crosshair">✛</div>
+</div>
+<div id="menu">
+  <h1>FROSTLINE 3D</h1>
+  <h2>NEON HARBOR</h2>
+  <button class="menu-btn" id="btn-new">New Game</button>
+  <button class="menu-btn" id="btn-continue">Continue</button>
+  <button class="menu-btn" id="btn-controls">Controls</button>
+  <button class="menu-btn" id="btn-settings">Settings</button>
+  <div id="menu-settings">
+    <div>Volume <input type="range" id="set-volume" min="0" max="100" value="70"></div>
+    <div>Mouse sensitivity <input type="range" id="set-sens" min="20" max="200" value="100"></div>
+    <div>Graphics <select id="set-quality"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option></select></div>
+    <div><label><input type="checkbox" id="set-invert"> Invert Y</label></div>
+  </div>
+  <div id="menu-tip">WASD move · Mouse look · E enter/exit car · F carjack · Space punch · R reload · 1-5 weapons · M map · Esc pause · F3 debug. Click to lock the mouse.</div>
+</div>
+<div id="pause-menu">
+  <h1>PAUSED</h1>
+  <button class="menu-btn" id="btn-resume">Resume</button>
+  <button class="menu-btn" id="btn-save">Save Game</button>
+  <button class="menu-btn" id="btn-quit">Quit to Title</button>
+</div>
+<div id="map-screen">
+  <h2>NEON HARBOR — MAP</h2>
+  <canvas id="map-canvas" width="900" height="700"></canvas>
+  <div id="map-hint">Click to set a waypoint · M or Esc to close · GPS route drawn in green</div>
+</div>
+<div id="end-screen"><h1 id="end-title">WASTED</h1><p id="end-sub"></p><button class="menu-btn" id="btn-end-continue">Continue</button></div>
+<div id="loading"><h1>FROSTLINE 3D</h1><div id="loading-bar"><div id="loading-fill"></div></div><div id="loading-tip">Loading Neon Harbor… Tip: hold Shift to sprint, E to steal a car, M for the map.</div></div>
+<div id="debug-overlay"></div>
+<div id="controls-overlay">WASD — move / drive<br>Mouse — look · Click — shoot<br>Shift — sprint · Space — jump / punch<br>E — enter/exit car · F — carjack<br>R — reload / flip car · 1–5 — weapons<br>Q — radio · M — map · Esc — pause<br>F3 — debug · H — controls</div>
+<div id="webgl-error"><div><h2>WebGL is unavailable</h2><p>FROSTLINE 3D needs WebGL to render its 3D city. Please use a desktop browser with hardware acceleration enabled, or update your graphics drivers.</p></div></div>
+<script src="vendor/three.min.js"></script>
+<script src="src/utils.js"></script>
+<script src="src/config.js"></script>
+<script src="src/audio.js"></script>
+<script src="src/city.js"></script>
+<script src="src/entities.js"></script>
+<script src="src/world.js"></script>
+<script src="src/missions.js"></script>
+<script src="src/hud.js"></script>
+<script src="src/main.js"></script>
+</body>
+</html>

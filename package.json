@@ -1,0 +1,1 @@
+{"description":"FROSTLINE 3D — a full 3D open-world crime game for make.fun gta6-01 (Three.js, bundled, offline)","devDependencies":{"esbuild":"^0.24.0","three":"^0.170.0"},"name":"frostline-3d","private":true,"scripts":{"build":"node build.mjs","serve":"node serve.mjs"},"type":"module","version":"1.0.0"}
