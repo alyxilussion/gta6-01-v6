@@ -37,6 +37,14 @@ clearContents(out);
 if (!existsSync(join(here, 'game', 'index.html'))) {
   throw new Error('game/index.html is missing — the entry would not run');
 }
+// v7: fail fast if any of the new v7 source files is missing — the game
+// loads them as plain scripts from game/src/, so a missing file would break
+// the build silently (the dossier would just omit it).
+for (const f of ['missions2.js', 'systems.js', 'vehicles2.js', 'docks.js', 'gang2.js', 'weather.js']) {
+  if (!existsSync(join(here, 'game', 'src', f))) {
+    throw new Error('game/src/' + f + ' is missing — the v7 entry would not run');
+  }
+}
 cpSync(join(here, 'game'), join(out, 'game'), { recursive: true });
 mkdirSync(join(out, 'screenshots'), { recursive: true });
 if (existsSync(join(here, 'screenshots'))) cpSync(join(here, 'screenshots'), join(out, 'screenshots'), { recursive: true });
@@ -45,6 +53,12 @@ if (existsSync(join(here, 'screenshots'))) cpSync(join(here, 'screenshots'), joi
 // scorer would refuse (more than 4 screenshots or one over 256 KiB; more than 993 files in game/ or 48 MiB of game
 // files, in all, or a path under game/ over 1000 bytes: game/ counts beside /output's own 1000-entry cap, its
 // screenshots/ and dossier.json).
+// v7 hands in six new source modules (missions2, systems, vehicles2, docks,
+// gang2, weather) plus the v7 integration in missions.js, world.js,
+// main.js and index.html. The dossier's text cap is unchanged — the new
+// code pushes the dossier text further past the cap, so the tail of the
+// dossier truncates exactly as it did in v6; the game files in /output
+// are always complete.
 writeFileSync(
   join(out, 'dossier.json'),
   buildDossier(out, {
@@ -56,4 +70,4 @@ writeFileSync(
   }),
 );
 
-console.log('FROSTLINE 3D handed in to ' + out);
+console.log('FROSTLINE 3D v7 handed in to ' + out);

@@ -46,6 +46,44 @@ procedural models/textures/audio only. Plays offline from `game/index.html`.
   dead/busted/map/gameover), third-person + chase + aim cameras with collision,
   pointer lock, input, F3 debug overlay, quality settings (Low/Med/High).
 
+## v7 modules (new in this version)
+- `game/src/missions2.js` — missions 9–12, appended to `FL.MISSIONS` at load
+  so the existing J-key flow picks them up. The core state machine in
+  `missions.js` owns the step index and delegates the four new step types
+  (`heist`, `race`, `stealth`, `boss`) here via `startStep`/`updateStep`
+  hooks; this module owns the mechanics (vault channel, rival AI, guard
+  vision cones, boss HP tracking). It never touches the core state directly
+  except through the exported `nextStep`/`failMission`/`setMarker` hooks.
+- `game/src/systems.js` — economy layer: weapon shop (6 items), car garage
+  (paint/engine/tires/armor, applied to a CLONED vehicle def — the shared
+  type defs in `FL.VEHICLES` are never mutated), vigilante takedowns and
+  courier deliveries. Menus reuse the objective line + prompt pill; keys are
+  routed from `main.js` while a menu is open. Side jobs borrow the mission
+  marker only when no story mission is running.
+- `game/src/vehicles2.js` — helicopter + boat as duck-typed vehicles (same
+  `group`/`heading`/`speed`/`hp`/`dead`/`def`/`update(dt, input)` interface
+  the player controller already uses), so boarding/driving/exiting need no
+  special case beyond the boardable list in `nearestVehicle`. The helicopter
+  flies (Space ascends, X descends, low flight collides with buildings); the
+  boat stays in the harbor water rect and steers around the cargo ship.
+  Motorbike wheelies re-apply the tilt every frame after the vehicle
+  physics, so the tilt reads as steady and settles smoothly.
+- `game/src/docks.js` — The Docks district. Every land structure is placed
+  only after a runtime `isBlocked` footprint check, because the seeded city
+  already builds industrial blocks along this strip; colliders are registered
+  with the city's spatial grid at runtime. The cargo ship bobs in the water;
+  the crane jib sweeps and the hook rides; workers wander the quay.
+- `game/src/gang2.js` — The Vipers. Vipers live in `FL.world.gangs` so the
+  player's shots can hit them; `world.js` skips `isViper` entries in its own
+  gang update (but still removes their corpses) and this module runs their
+  AI: group convergence, molotovs with a telegraphed fire zone, territory
+  patrols. The boss (600 HP, three phases) is a flagged gang member; his
+  death effects fire once via a `deathFxDone` flag.
+- `game/src/weather.js` — a slow state machine (clear/drizzle/downpour/
+  storm/fog) that owns the rain flag, rain opacity and fog band, with
+  lightning flashes (sun/hemi spike) + delayed thunder, rotating-slice
+  exhaust puffs from traffic, and expanding shockwave rings on explosions.
+
 ## Rules enforced
 - Fixed timestep, try/catch per subsystem, NaN/Infinity guards, spawn
   validation on the nav graph, stuck detection + auto-respawn, car flip

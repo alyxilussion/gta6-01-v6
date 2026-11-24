@@ -251,6 +251,11 @@
       return;
     }
     if (game.state === 'title') return;
+    // v7: when a shop/garage menu is open, it owns the keys (Esc closes it).
+    if (FL.systems && FL.systems.menuOpen()) {
+      FL.systems.menuKey(code);
+      return;
+    }
     if (code === 'Escape') {
       if (game.state === 'map') { closeMap(); return; }
       if (game.state === 'playing') { game.pause(); return; }
@@ -273,6 +278,9 @@
         break;
       case 'KeyT': FL.missions.startTaxi(); break;
       case 'KeyY': FL.missions.startRace(); break;
+      case 'KeyB': if (FL.systems) FL.systems.toggleShop(); break;
+      case 'KeyN': if (FL.systems) FL.systems.startVigilante(); break;
+      case 'KeyU': if (FL.systems) FL.systems.startDelivery(); break;
       case 'KeyJ': {
         var ms = FL.missions.getState();
         if (ms.state === 'active' || ms.state === 'intro') {
@@ -318,6 +326,11 @@
     }
     FL.world.traffic.forEach(function (c) { check(c.v, 'traffic'); });
     FL.world.policeCars.forEach(function (c) { check(c.v, 'police'); });
+    // v7: helicopters + boats are boardable too (the boat from the causeway).
+    if (FL.vehicles2) {
+      FL.vehicles2.helis.forEach(function (h) { check(h, 'heli'); });
+      FL.vehicles2.boats.forEach(function (b) { check(b, 'boat'); });
+    }
     return best;
   }
   function tryEnterCar() {
@@ -366,6 +379,11 @@
     var p = game.player;
     if (!p || !p.vehicle) return;
     var v = p.vehicle;
+    // v7: no bailing out of a helicopter mid-air — land first.
+    if (v.isHeli && v.group.position.y > 3) {
+      FL.hud.notify('Mendarat dulu sebelum keluar!');
+      return;
+    }
     var side = { x: v.group.position.x + Math.cos(v.heading) * 3, z: v.group.position.z - Math.sin(v.heading) * 3 };
     var res = FL.city.resolveCircle(side.x, side.z, 0.6);
     p.group.position.set(res.x, 0, res.z);
@@ -608,12 +626,14 @@
       var lookBehind = !!game.keys['KeyC'];
       var yaw = lookBehind ? v.heading + Math.PI : v.heading;
       var dist = 9.5;
+      // v7: a helicopter's chase camera rides at its altitude.
+      var alt = v.isHeli ? v.group.position.y : 0;
       var cx = v.group.position.x - Math.sin(yaw) * dist;
       var cz = v.group.position.z - Math.cos(yaw) * dist;
-      var cy = 4.2;
+      var cy = 4.2 + alt;
       var lx = lookBehind ? v.group.position.x : v.group.position.x + Math.sin(v.heading) * 10;
       var lz = lookBehind ? v.group.position.z : v.group.position.z + Math.cos(v.heading) * 10;
-      desired = { x: cx, y: cy, z: cz, lookX: lx, lookY: 2.6, lookZ: lz };
+      desired = { x: cx, y: cy, z: cz, lookX: lx, lookY: 2.6 + alt, lookZ: lz };
     } else if (game.aiming) {
       // Over-the-shoulder aim camera.
       var ay = game.camYaw;
@@ -857,6 +877,12 @@
       FL.guard('world', function () { FL.world.update(dt); });
       FL.guard('city', function () { FL.city.update(game.player.position, performance.now() / 1000); });
       FL.guard('missions', function () { FL.missions.update(dt); FL.missions.updateSide(dt); });
+      // v7: extended systems (each guarded, like the rest).
+      FL.guard('systems', function () { if (FL.systems) FL.systems.update(dt); });
+      FL.guard('vehicles2', function () { if (FL.vehicles2) FL.vehicles2.update(dt); });
+      FL.guard('docks', function () { if (FL.docks) FL.docks.update(dt); });
+      FL.guard('gang2', function () { if (FL.gang2) FL.gang2.update(dt); });
+      FL.guard('weather', function () { if (FL.weather) FL.weather.update(dt); });
       FL.guard('particles', function () { FL.particles.update(dt); });
       FL.guard('audio', function () { FL.audio.radioUpdate(dt); });
       // Autosave every 60 s.
@@ -920,6 +946,14 @@
     FL.world.init(game.scene, game);
     FL.world.setPlayer(game.player);
     FL.missions.init(game.scene, game);
+    // v7: extended systems — missions m9-m12, shop/garage, new vehicles,
+    // the Docks, the Vipers, dynamic weather.
+    if (FL.missions2) FL.missions2.init(game.scene, game);
+    if (FL.systems) FL.systems.init(game.scene, game);
+    if (FL.vehicles2) FL.vehicles2.init(game.scene, game);
+    if (FL.docks) FL.docks.init(game.scene, game);
+    if (FL.gang2) FL.gang2.init(game.scene, game);
+    if (FL.weather) FL.weather.init(game.scene, game);
     initInput();
     FL.hud.setLoading(0.85, 'Menyiapkan radio dan suara...');
     await sleep(30);

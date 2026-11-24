@@ -30,6 +30,19 @@ missions with cinematic dialogue, then free roam:
 After the eighth job, free roam: taxi fares, street races, collectibles,
 carjackings, and outrunning the law.
 
+**v7 adds four more story missions** (9–12), unlocked in order after the
+eighth job:
+
+9. **The Big One** — a heist: gather the crew, crack the Harbor Bank vault
+   (hold E at the vault), then lose a 4-star wanted level.
+10. **Neon Grand Prix** — a street race: six checkpoints across the city
+    against two rival AI drivers, Vex and Rook, on a 180-second clock.
+11. **Silent Harbor** — stealth: slip past the Docks guards' vision cones,
+    disable the alarm panel (hold E), and extract the ledger.
+12. **Viper's Nest** — the finale against Seth Vane, boss of The Vipers,
+    in three phases: pistol fire, then molotovs and summoned minions, then
+    an enraged charge.
+
 ## Systems
 
 - **On foot and by car** — walk the sidewalks or steal any car; seven vehicle
@@ -57,6 +70,31 @@ carjackings, and outrunning the law.
 - **Sound** — everything synthesized in WebAudio: engines, tires, gunfire,
   sirens, crashes, footsteps and three procedural radio genres. M mutes.
 
+**v7 systems:**
+
+- **The Docks** — a working harbor district on the south waterfront:
+  warehouses, a rotating gantry crane, a cargo ship at anchor, container
+  stacks, wandering dock workers, an island helipad and five collectible
+  crates (+$100 each, $250 bonus for all five).
+- **Helicopter and boat** — a flyable helicopter (Space ascends, X
+  descends) moored on the island helipad, and a boat for the harbor water
+  moored beside the causeway. Motorbikes can wheelie (hold Shift+W above
+  12 m/s) for style cash.
+- **Weapon shop and garage** — Ammu-Nation (green ring, press B on foot)
+  sells ammo, the SMG, the shotgun, grenades, armor and medkits; Dex's
+  Garage (cyan ring, press B in a car) repaints cars and upgrades engine,
+  tires and armor.
+- **Side jobs** — vigilante takedowns (N: chase a fleeing criminal, stay
+  close for 3 seconds to bust them) and courier deliveries (U: pick up a
+  package, deliver it in 90 seconds).
+- **The Vipers** — a rival gang in green that owns the southwest Docks:
+  they attack in groups, throw molotovs that leave burning zones, and
+  patrol their territory when the player enters it.
+- **Dynamic weather** — the sky cycles through clear, drizzle, downpour,
+  storm (lightning flashes with delayed thunder) and fog; rain density and
+  fog distance follow the state. Traffic puffs exhaust, and every
+  explosion throws an expanding shockwave ring.
+
 ## Controls
 
 | Key | Action |
@@ -74,6 +112,11 @@ carjackings, and outrunning the law.
 | C | Look behind (driving) |
 | H | Show controls overlay |
 | F3 | Debug overlay |
+| B | Shop / garage menu (near the rings) |
+| N | Vigilante takedown |
+| U | Courier delivery |
+| X | Descend (helicopter) |
+| Shift+W | Wheelie (motorbike) |
 
 ## Run it
 
@@ -98,6 +141,12 @@ the running game.
 - `game/src/entities.js` — Mara, cars, traffic, pedestrians, police.
 - `game/src/world.js` — world state, spawning, collision, day/night, weather.
 - `game/src/missions.js` — the eight chained jobs, cutscenes and rewards.
+- `game/src/missions2.js` — v7: missions 9–12 (heist, race, stealth, boss).
+- `game/src/systems.js` — v7: weapon shop, car garage, vigilante, courier.
+- `game/src/vehicles2.js` — v7: helicopter, boat, motorbike wheelie.
+- `game/src/docks.js` — v7: The Docks district (warehouses, crane, ship).
+- `game/src/gang2.js` — v7: The Vipers gang + the Seth Vane boss fight.
+- `game/src/weather.js` — v7: dynamic weather, lightning, exhaust, shockwaves.
 - `game/src/audio.js` — synthesized WebAudio: engines, sirens, effects, radio.
 - `game/src/hud.js` — HUD, minimap, full-screen map, menus.
 - `game/src/main.js` — game loop, screens, wanted heat, saves, boot.

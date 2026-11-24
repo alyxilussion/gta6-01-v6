@@ -116,6 +116,30 @@
         { type: 'goto', x: 192, z: -32, text: 'Pergi ke gerbang Stadion Harbor' },
         { type: 'kills', kills: 8, x: 192, z: -32, text: 'Habisi Kade dan pengawalnya (8 target)' },
       ];
+      case 8: return [
+        // v7: m9 "The Big One" — heist: gather the crew, crack the vault,
+        // then lose a 4-star wanted level.
+        { type: 'heist', phase: 'crew', x: -96, z: 96, text: 'Kumpulkan tim: temui Dex di garasi barat' },
+        { type: 'heist', phase: 'crew', x: 96, z: -96, text: 'Temui Silas di Downtown utara' },
+        { type: 'heist', phase: 'vault', x: 96, z: 96, text: 'Bobol brankas Bank Harbor (tahan E di dekat brankas)' },
+        { type: 'evade', text: 'Kabur dari polisi dengan 4 bintang wanted' },
+      ];
+      case 9: return [
+        // v7: m10 "Neon Grand Prix" — street race, 6 checkpoints, 2 rivals.
+        { type: 'race', time: 180, text: 'Neon Grand Prix: 6 checkpoint, kalahkan Vex dan Rook (180 detik)' },
+      ];
+      case 10: return [
+        // v7: m11 "Silent Harbor" — stealth: infiltrate the Docks, disable
+        // the alarm, extract the documents.
+        { type: 'stealth', phase: 'infiltrate', x: -224, z: 224, text: 'Masuk ke gudang Docks tanpa ketahuan penjaga' },
+        { type: 'stealth', phase: 'alarm', x: -160, z: 256, text: 'Nonaktifkan panel alarm (tahan E di dekat panel)' },
+        { type: 'stealth', phase: 'extract', x: -96, z: 160, text: 'Bawa dokumen keluar dari Docks' },
+      ];
+      case 11: return [
+        // v7: m12 "Viper's Nest" — boss fight against Seth Vane.
+        { type: 'goto', x: -224, z: 256, text: 'Pergi ke sarang Viper di Docks' },
+        { type: 'boss', text: 'Kalahkan Seth Vane, bos The Vipers' },
+      ];
       default: return [];
     }
   }
@@ -150,6 +174,10 @@
       FL.world.addWanted(3, 'bank heist');
       FL.world.spawnGang(96, 96, 4);
     }
+    if (step.type === 'heist' || step.type === 'race' || step.type === 'stealth' || step.type === 'boss') {
+      // v7: extended-mission mechanics live in missions2.js.
+      if (FL.missions2) FL.missions2.startStep(step, M.current);
+    }
   }
   function nextStep() {
     M.step++;
@@ -183,7 +211,7 @@
     M.step = 0;
     // Intro cutscene (briefing dialogue).
     var lines = [
-      [def.giver, def.briefing],
+      [def.giver, def.brief || def.briefing],
       ['Kai', 'Siap. Aku yang urus.'],
     ];
     if (idx === 0) {
@@ -256,6 +284,10 @@
       }
       case 'survive':
         // Handled by the timer above.
+        break;
+      case 'heist': case 'race': case 'stealth': case 'boss':
+        // v7: the step's own mechanics decide when it advances.
+        if (FL.missions2) FL.missions2.updateStep(dt, step);
         break;
     }
     // Mission marker pulse.
@@ -345,4 +377,10 @@
   };
   FL.missions.getMarkerPos = function () { return M.markerPos; };
   FL.missions.getState = function () { return { current: M.current, state: M.state, step: M.step }; };
+  // v7: hooks for missions2 (extended missions m9-m12) and systems.js
+  // (vigilante + delivery borrow the marker when no mission is running).
+  FL.missions.setMarker = setMarker;
+  FL.missions.clearMarker = clearMarker;
+  FL.missions.nextStep = nextStep;
+  FL.missions.failMission = failMission;
 })();

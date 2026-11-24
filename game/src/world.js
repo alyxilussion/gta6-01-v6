@@ -369,6 +369,10 @@
         if (gang.deadTimer > 10) { world.scene.remove(gang.g); world.gangs.splice(i, 1); }
         continue;
       }
+      // v7: Vipers, stealth guards and the boss live in world.gangs so the
+      // player's shots can hit them, but their AI runs in gang2.js /
+      // missions2.js — skip them here (dead ones are still cleaned up above).
+      if (gang.isViper) continue;
       gang.animT += dt;
       var dx = pp.x - gang.g.position.x, dz = pp.z - gang.g.position.z;
       var dist = Math.sqrt(dx * dx + dz * dz);
