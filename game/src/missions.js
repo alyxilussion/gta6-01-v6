@@ -195,9 +195,13 @@
     M.state = 'complete';
     clearMarker();
     FL.audio.mission();
-    M.game.addMoney(def.reward);
-    FL.emit('mission-complete', { mission: def, reward: def.reward });
-    FL.emit('notif', 'Misi selesai! +' + FL.fmtMoney(def.reward));
+    // v8: a job well done pays a random bonus (10-20% of the reward) —
+    // the crew's cut varies with the heat of the job.
+    var bonus = Math.round(def.reward * FL.rand(0.10, 0.20));
+    var total = def.reward + bonus;
+    M.game.addMoney(total);
+    FL.emit('mission-complete', { mission: def, reward: total });
+    FL.emit('notif', 'Misi selesai! +' + FL.fmtMoney(total) + ' (termasuk bonus ' + FL.fmtMoney(bonus) + ')');
     if (def.unlock) FL.emit('notif', 'Unlock: ' + def.unlock);
     M.current = -1;
     M.game.saveGame();

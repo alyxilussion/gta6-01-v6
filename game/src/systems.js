@@ -110,6 +110,9 @@
       { name: 'Armor +50', price: 300, desc: 'Pelindung badan, menyerap damage',
         owned: function () { return p.armor >= 100; },
         buy: function () { p.armor = Math.min(100, p.armor + 50); } },
+      { name: 'Rompi Anti-Peluru', price: 500, desc: 'Armor penuh + serap 80% damage (bukan 60%), permanen',
+        owned: function () { return !!p.vest; },
+        buy: function () { p.armor = 100; p.vest = true; } },
       { name: 'Medkit +50', price: 150, desc: 'Pulihkan 50 HP',
         owned: function () { return p.health >= 100; },
         buy: function () { p.health = Math.min(100, p.health + 50); } },
@@ -180,6 +183,13 @@
   }
   FL.systems.toggleShop = function () {
     if (S.menu) { closeMenu(); return; }
+    // v8: Ammu-Nation + Dex's Garage tutup di luar jam 07:00-22:00
+    // (day/night gameplay — the clock is read from FL.daynight).
+    if (FL.daynight && !FL.daynight.shopOpen()) {
+      FL.hud.notify('Toko tutup — buka lagi jam 07:00 (sekarang jam ' + Math.floor(S.game.hour) + ':00)');
+      FL.audio.fail();
+      return;
+    }
     var p = S.game.player;
     var pp = p.position;
     if (!p.inCar && FL.dist2(pp.x, pp.z, SHOP_POS.x, SHOP_POS.z) < 49) {

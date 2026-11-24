@@ -87,6 +87,7 @@
     font: 12px/1.5 monospace; background: rgba(0,20,10,.6); padding: 8px; border-radius: 6px; white-space: pre; }
   #controls-overlay { position: fixed; right: 12px; top: 220px; z-index: 15; display: none; color: #cfe6ff;
     font: 12px/1.7 system-ui, sans-serif; background: rgba(5,10,22,.7); padding: 10px 14px; border-radius: 8px; }
+  #taxi-chip { position: absolute; left: 12px; top: 218px; display: none; font-size: 13px; font-weight: 700; color: #7dff9a; }
 </style>
 </head>
 <body>
@@ -105,6 +106,7 @@
     <div id="weapon">Fists</div><div id="ammo"></div>
   </div>
   <div id="speedo" class="hud-box" style="display:none"><div id="speed-value">0</div><div id="gear-value">km/h · D</div></div>
+  <div id="taxi-chip" class="hud-box">TAXI 1/5 · 5:00 · +$0</div>
   <div id="prompt"></div>
   <div id="notif"></div>
   <div id="crosshair">✛</div>
@@ -122,7 +124,7 @@
     <div>Graphics <select id="set-quality"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option></select></div>
     <div><label><input type="checkbox" id="set-invert"> Invert Y</label></div>
   </div>
-  <div id="menu-tip">WASD move · Mouse look · E enter/exit car · F carjack · Space punch · R reload · 1-5 weapons · M map · Esc pause · F3 debug. Click to lock the mouse.</div>
+  <div id="menu-tip">WASD move · Mouse look · E enter/exit car · F carjack · Space punch · R reload · 1-5 weapons · M map · Esc pause · F3 debug · T taxi shift · V heli horn. Click to lock the mouse.</div>
 </div>
 <div id="pause-menu">
   <h1>PAUSED</h1>
@@ -138,7 +140,7 @@
 <div id="end-screen"><h1 id="end-title">WASTED</h1><p id="end-sub"></p><button class="menu-btn" id="btn-end-continue">Continue</button></div>
 <div id="loading"><h1>FROSTLINE 3D</h1><div id="loading-bar"><div id="loading-fill"></div></div><div id="loading-tip">Loading Neon Harbor… Tip: hold Shift to sprint, E to steal a car, M for the map.</div></div>
 <div id="debug-overlay"></div>
-<div id="controls-overlay">WASD — move / drive<br>Mouse — look · Click — shoot<br>Shift — sprint · Space — jump / punch<br>E — enter/exit car · F — carjack<br>R — reload / flip car · 1–5 — weapons<br>Q — radio · M — map · Esc — pause<br>F3 — debug · H — controls</div>
+<div id="controls-overlay">WASD — move / drive<br>Mouse — look · Click — shoot<br>Shift — sprint · Space — jump / punch<br>E — enter/exit car · F — carjack<br>R — reload / flip car · 1–5 — weapons<br>Q — radio · M — map · Esc — pause<br>T — taxi shift (5 fare) · V — heli horn<br>F3 — debug · H — controls</div>
 <div id="webgl-error"><div><h2>WebGL is unavailable</h2><p>FROSTLINE 3D needs WebGL to render its 3D city. Please use a desktop browser with hardware acceleration enabled, or update your graphics drivers.</p></div></div>
 <script src="vendor/three.min.js"></script>
 <script src="src/utils.js"></script>
@@ -154,6 +156,8 @@
 <script src="src/docks.js"></script>
 <script src="src/gang2.js"></script>
 <script src="src/weather.js"></script>
+<script src="src/daynight.js"></script>
+<script src="src/taxi.js"></script>
 <script src="src/hud.js"></script>
 <script src="src/main.js"></script>
 </body>

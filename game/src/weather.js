@@ -80,6 +80,8 @@
       // A jagged sky flash: spike the sun + hemisphere light.
       if (W.game.sun) W.game.sun.intensity += 3.5;
       if (W.game.hemi) W.game.hemi.intensity += 1.5;
+      // v8: the bolt can strike a street lamp near the player.
+      strikeLamp();
     }
     if (W.flashT > 0) {
       W.flashT -= dt;
@@ -95,6 +97,49 @@
         FL.audio.blip(55, 1.1, 'sine', 0.3);
         setTimeout(function () { FL.audio.blip(42, 0.8, 'sine', 0.2); }, 250);
       }
+    }
+  }
+
+  // --- Lightning striking a street lamp (v8) ---
+  // A bolt picks a random lamp within 120 m of the player and draws a
+  // jagged line from the sky (y=40) down to the lamp head (y=7, the height
+  // city.js mounts the heads at), with sparks at the strike point and a
+  // sharp crack. The line lives 0.25 s and fades out.
+  var BOLT_LIFE = 0.25;
+  var strikeLine = null, strikeT = 0;
+  function strikeLamp() {
+    var lamps = FL.city.lamps || [];
+    if (!lamps.length || !W.scene) return;
+    var pp = W.game.player ? W.game.player.position : { x: 0, z: 0 };
+    var near = lamps.filter(function (l) {
+      return FL.dist2(l.x, l.z, pp.x, pp.z) < 14400; // within 120 m
+    });
+    if (!near.length) return;
+    var lamp = FL.pick(near);
+    var pts = [];
+    for (var i = 0; i <= 8; i++) {
+      var y = 40 - (40 - 7) * (i / 8);
+      var jag = (i > 0 && i < 8) ? FL.rand(-2, 2) : 0;
+      pts.push(new THREE.Vector3(lamp.x + jag, y, lamp.z + jag));
+    }
+    var geo = new THREE.BufferGeometry().setFromPoints(pts);
+    if (strikeLine) { W.scene.remove(strikeLine); strikeLine.geometry.dispose(); }
+    strikeLine = new THREE.Line(geo, new THREE.LineBasicMaterial({ color: 0xcfe6ff, transparent: true, opacity: 1 }));
+    W.scene.add(strikeLine);
+    strikeT = BOLT_LIFE;
+    FL.particles.burst(lamp.x, 7, lamp.z, 12, { color: 0xffe28a, size: 0.7, life: 0.5, spread: 4, vy: 2 });
+    FL.audio.noise(0.15, 3000, 0.4, 'highpass'); // the crack
+    FL.audio.blip(180, 0.1, 'sawtooth', 0.2);
+  }
+  function updateStrike(dt) {
+    if (strikeT <= 0) return;
+    strikeT -= dt;
+    if (strikeT <= 0 && strikeLine) {
+      W.scene.remove(strikeLine);
+      strikeLine.geometry.dispose();
+      strikeLine = null;
+    } else if (strikeLine) {
+      strikeLine.material.opacity = strikeT / BOLT_LIFE;
     }
   }
 
@@ -157,6 +202,7 @@
     if (W.timer <= 0) setState(pickNextState());
     updateRainAndFog(dt);
     updateLightning(dt);
+    updateStrike(dt);
     updateExhaust(dt);
     updateRings(dt);
   };

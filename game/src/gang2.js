@@ -23,6 +23,7 @@
     pendingMolotovs: [], // { x, z, t }
     territoryTimer: 0,
     fireTick: 0,
+    radioTimer: 0, // v8: Viper radio chatter (at most one line per 15-25 s)
   };
   FL.gang2 = G;
 
@@ -190,6 +191,26 @@
     }
   }
 
+  // --- Viper radio chatter (v8) ---
+  // When Vipers are in combat with the player, their radio crackles with
+  // short callouts (at most one every 15-25 s, so it never spams). A radio
+  // squelch blip plays a beat before the line appears.
+  var RADIO_LINES = [
+    'Viper-1: "Target terlihat! Semua unit ke posisiku!"',
+    'Viper-2: "Dia bersenjata — jangan maju sendiri!"',
+    'Viper-3: "Panggil bantuan, kita butuh molotov!"',
+    'Viper-1: "Jangan biarkan dia lolos dari wilayah kita!"',
+    'Viper-2: "Tembak ban mobilnya!"',
+    'Viper-4: "Bos bilang: tangkap dia hidup-hidup... atau tidak."',
+  ];
+  function updateRadio(dt, inCombat) {
+    G.radioTimer -= dt;
+    if (!inCombat || G.radioTimer > 0) return;
+    G.radioTimer = FL.rand(15, 25);
+    FL.audio.blip(1200, 0.06, 'square', 0.1); // radio squelch
+    setTimeout(function () { FL.emit('notif', FL.pick(RADIO_LINES)); }, 250);
+  }
+
   // --- Viper AI + territory ---
   function updateVipers(dt) {
     if (!G.game.player) return;
@@ -252,8 +273,18 @@
         }
         FL.gang2.spawnViper(spot.x, spot.z, 3);
         FL.emit('notif', 'Kamu memasuki wilayah The Vipers!');
+        // The patrol answers on the radio a beat later.
+        FL.audio.blip(1200, 0.06, 'square', 0.1);
+        setTimeout(function () { FL.emit('notif', 'Viper: "Penyusup di wilayah kita — semua unit siaga!"'); }, 1200);
       }
     }
+    // v8: radio chatter while any Viper is in combat range (45 m).
+    var inCombat = false;
+    G.vipers.forEach(function (v) {
+      if (v.dead) return;
+      if (FL.dist2(v.g.position.x, v.g.position.z, pp.x, pp.z) < 2025) inCombat = true;
+    });
+    updateRadio(dt, inCombat);
   }
 
   FL.gang2.update = function (dt) {

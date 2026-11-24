@@ -304,12 +304,16 @@
       if (wallT > 0 && wallT < bestT) { bestT = wallT; hit = null; hitKind = 'wall'; }
       var end = { x: origin.x + d.x * bestT, y: (origin.y || 1.4) + (d.y || 0) * bestT, z: origin.z + d.z * bestT };
       fireTracer(tip, end);
+      // v8: shotgun pellets lose damage with distance (full at point-blank,
+      // 40% at max range) — a scattergun is a close-range weapon.
+      var dmg = weapon.damage;
+      if (weapon.pellets > 1) dmg = weapon.damage * (1 - 0.6 * (bestT / weapon.range));
       if (hitKind === 'wall') {
         FL.particles.burst(end.x, end.y, end.z, 4, { color: 0xffd88a, size: 0.4, life: 0.3, spread: 3 });
       } else if (hit) {
         FL.particles.burst(end.x, end.y, end.z, 5, { color: 0xffcc66, size: 0.5, life: 0.35, spread: 3 });
         if (hitKind === 'ped') {
-          hit.hp -= weapon.damage;
+          hit.hp -= dmg;
           if (hit.hp <= 0 && !hit.dead) {
             hit.dead = true;
             hit.g.userData.setPose('fall', 0, 0);
@@ -322,21 +326,31 @@
             hit.panicDir.x /= l; hit.panicDir.z /= l;
           }
         } else if (hitKind === 'gang') {
-          hit.hp -= weapon.damage;
+          hit.hp -= dmg;
           if (hit.hp <= 0 && !hit.dead) {
             hit.dead = true;
             hit.g.userData.setPose('fall', 0, 0);
             FL.emit('gang-down', hit);
           }
         } else if (hitKind === 'cop') {
-          hit.hp -= weapon.damage;
+          hit.hp -= dmg;
           FL.world.addWanted(1, 'cop down');
           if (hit.hp <= 0 && !hit.dead) {
             hit.dead = true;
             hit.g.userData.setPose('fall', 0, 0);
           }
         } else if (hitKind === 'car' || hitKind === 'policecar') {
-          hit.v.damage(weapon.damage * 0.6);
+          hit.v.damage(dmg * 0.6);
+        }
+        // v8: shotgun pellets knock humanoids back (stronger up close).
+        if (weapon.pellets > 1 && (hitKind === 'ped' || hitKind === 'gang' || hitKind === 'cop')) {
+          var kx = hit.g.position.x - origin.x, kz = hit.g.position.z - origin.z;
+          var kl = Math.sqrt(kx * kx + kz * kz) || 1;
+          var push = FL.clamp(1.2 - bestT / weapon.range, 0.2, 1.2);
+          var knx = hit.g.position.x + (kx / kl) * push;
+          var knz = hit.g.position.z + (kz / kl) * push;
+          var kres = FL.city.resolveCircle(knx, knz, 0.5);
+          hit.g.position.x = kres.x; hit.g.position.z = kres.z;
         }
       }
     }
@@ -536,6 +550,13 @@
     // on top of a hiding player (that made evasion impossible).
     var wantCars = wanted === 0 ? 0 : (wanted === 1 ? 1 : (wanted === 2 ? 2 : (wanted === 3 ? 3 : 4)));
     var wantCops = wanted >= 2 ? Math.min(6, wanted * 2) : 0;
+    // v8: after dark the police patrol thickens (day/night gameplay —
+    // the boost comes from FL.daynight, never from the clock directly).
+    if (wanted > 0 && FL.daynight) {
+      var boost = FL.daynight.policeBoost();
+      wantCars = Math.min(6, wantCars + boost.cars);
+      wantCops = Math.min(8, wantCops + boost.cops);
+    }
     var spawning = wanted > 0 && world.alerted;
     if (spawning && world.policeCars.length < wantCars && Math.random() < dt * 2) spawnPoliceCar(true);
     if (spawning && world.footCops.length < wantCops && Math.random() < dt * 2) {
@@ -677,7 +698,7 @@
 
   // --- Pickups ---
   FL.world.spawnPickup = function (kind, x, z) {
-    var colors = { health: 0x51ff7a, armor: 0x5aa8ff, ammo: 0xffd75e, money: 0x7dff9a };
+    var colors = { health: 0x51ff7a, armor: 0x5aa8ff, ammo: 0xffd75e, money: 0x7dff9a, shotgun: 0xff7722 };
     var g = new THREE.Group();
     var boxM = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.7, 0.7),
       new THREE.MeshStandardMaterial({ color: colors[kind] || 0xffffff, emissive: colors[kind] || 0xffffff, emissiveIntensity: 1.2 }));
@@ -711,12 +732,36 @@
   }
 
   // --- Lifecycle ---
+  // v8: a "NEON HARBOR" welcome sign on the road into downtown (visual
+  // only — no collider, so it never blocks the player or traffic). It
+  // stands on the sidewalk by the spawn road (x=7, z=36).
+  function buildWelcomeSign() {
+    var c = document.createElement('canvas'); c.width = 256; c.height = 64;
+    var g = c.getContext('2d');
+    g.fillStyle = '#0a1428'; g.fillRect(0, 0, 256, 64);
+    g.strokeStyle = '#2de8ff'; g.lineWidth = 4; g.strokeRect(3, 3, 250, 58);
+    g.fillStyle = '#dff3ff'; g.font = 'bold 30px system-ui, sans-serif';
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText('NEON HARBOR', 128, 34);
+    var tex = new THREE.CanvasTexture(c);
+    var board = new THREE.Mesh(new THREE.BoxGeometry(4.4, 1.1, 0.15),
+      new THREE.MeshStandardMaterial({ map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.35 }));
+    board.position.set(7, 3.4, 36);
+    board.castShadow = true;
+    var pole = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 3, 6),
+      new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.6, metalness: 0.5 }));
+    pole.position.set(7, 1.5, 36);
+    pole.castShadow = true;
+    world.scene.add(board);
+    world.scene.add(pole);
+  }
   FL.world.init = function (scene, game) {
     world.scene = scene;
     world.game = game;
     initTracers(scene);
     initCombatFx(scene);
     buildNavGraphRef();
+    buildWelcomeSign();
     // Seed traffic + peds + a few pickups.
     for (var i = 0; i < 16; i++) spawnTrafficCar();
     for (var j = 0; j < 26; j++) spawnPed();
@@ -724,6 +769,12 @@
       var p = FL.city.randomSidewalkPoint();
       FL.world.spawnPickup(FL.pick(['health', 'armor', 'ammo', 'money']), p.x, p.z);
     }
+    // v8: three fixed shotgun pickups (free M870s for players who find
+    // them): the stadium gate, the northwest intersection, the Docks
+    // warehouse row. All three sit on reachable open ground.
+    FL.world.spawnPickup('shotgun', 192, -32);
+    FL.world.spawnPickup('shotgun', -288, -288);
+    FL.world.spawnPickup('shotgun', -120, 250);
     FL.on('explosion', function (e) {
       FL.world.panicNearby(e.x, e.z, 40);
       // Chain damage to nearby vehicles.

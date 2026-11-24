@@ -38,6 +38,7 @@
     stealth: null, // { guards, detection, alarmOn, channel, phase }
     bossRef: null, // gang object for Seth Vane (lives in FL.world.gangs)
     bossTimer: 0,
+    heistBriefed: false, // v8: the m9 crew briefing plays once per attempt
   };
   FL.missions2 = S;
 
@@ -45,9 +46,10 @@
     S.scene = scene;
     S.game = game;
     // A failed or finished mission must never leave rivals or stealth
-    // guards behind — clean both up on either outcome.
-    FL.on('mission-failed', function () { cleanupRace(); cleanupStealth(); });
-    FL.on('mission-complete', function () { cleanupRace(); cleanupStealth(); });
+    // guards behind — clean both up on either outcome. The heist briefing
+    // flag resets too, so a retry hears the crew talk again.
+    FL.on('mission-failed', function () { cleanupRace(); cleanupStealth(); S.heistBriefed = false; });
+    FL.on('mission-complete', function () { cleanupRace(); cleanupStealth(); S.heistBriefed = false; });
     // Shooting a stealth guard trips the alarm (unless it is already off).
     FL.on('gang-down', function (hit) {
       if (!S.stealth || !S.stealth.alarmOn) return;
@@ -80,6 +82,24 @@
   // The vault phase is a channel: hold E near the vault for 8 seconds.
   var VAULT_TIME = 8;
   function startHeist(step) {
+    // v8: the heist opens with a short crew briefing (subtitle dialogue,
+    // shown once per attempt) before the first crew pickup. The intro
+    // cutscene already ended by now, so the subtitles own the screen.
+    if (step.phase === 'crew' && !S.heistBriefed) {
+      S.heistBriefed = true;
+      var lines = [
+        ['SILAS REN', 'Bank Harbor punya brankas baru. Tiga lapis baja, satu celah.'],
+        ['DEX KARR', 'Celahnya? Jangan bilang kita masuk lewat selokan lagi.'],
+        ['SILAS REN', 'Lewat atap. Kumpulkan tim, lalu kita bobol brankasnya.'],
+        ['KAI', 'Siap. Jangan ada yang ketinggalan.'],
+      ];
+      lines.forEach(function (line, i) {
+        setTimeout(function () {
+          FL.emit('subtitle', { speaker: line[0], text: line[1] });
+        }, i * 3500);
+      });
+      setTimeout(function () { FL.hud.hideSubtitle(); }, lines.length * 3500);
+    }
     if (step.phase === 'vault') {
       S.heist = { progress: 0, started: false };
       FL.emit('notif', 'Brankas Bank Harbor — tahan E untuk membobol');

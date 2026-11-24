@@ -276,7 +276,12 @@
       case 'Digit1': case 'Digit2': case 'Digit3': case 'Digit4': case 'Digit5':
         selectWeapon(parseInt(code.slice(5), 10) - 1);
         break;
-      case 'KeyT': FL.missions.startTaxi(); break;
+      case 'KeyT':
+        // v8: KeyT starts the taxi shift (5 fares, one clock); if the
+        // taxi module failed to load, fall back to the one-fare job.
+        if (FL.taxi) FL.taxi.startShift();
+        else FL.missions.startTaxi();
+        break;
       case 'KeyY': FL.missions.startRace(); break;
       case 'KeyB': if (FL.systems) FL.systems.toggleShop(); break;
       case 'KeyN': if (FL.systems) FL.systems.startVigilante(); break;
@@ -797,7 +802,9 @@
     if (!p || game.state !== 'playing') return;
     var amount = e.amount || 10;
     if (p.armor > 0) {
-      var absorbed = Math.min(p.armor, amount * 0.6);
+      // v8: the armor vest (Ammu-Nation, $500) absorbs 80% instead of 60%.
+      var absorbRate = p.vest ? 0.8 : 0.6;
+      var absorbed = Math.min(p.armor, amount * absorbRate);
       p.armor -= absorbed;
       amount -= absorbed;
     }
@@ -836,6 +843,17 @@
     if (kind === 'armor') p.armor = Math.min(100, p.armor + 25);
     if (kind === 'ammo') { p.reserveAmmo += 60; p.grenades = Math.min(5, p.grenades + 1); }
     if (kind === 'money') game.money += 50;
+    // v8: a shotgun pickup grants the M870 (or +36 shells if owned).
+    if (kind === 'shotgun') {
+      if (p.weapons.indexOf('shotgun') < 0) {
+        p.weapons.push('shotgun');
+        p.reserveAmmo += 36;
+        FL.hud.notify('Shotgun M870 didapat! Tekan 1-5 untuk ganti senjata');
+      } else {
+        p.reserveAmmo += 36;
+        FL.hud.notify('Amunisi shotgun +36');
+      }
+    }
   });
   FL.on('mission-complete', function () { game.missionsCompleted++; });
   FL.on('cutscene-start', function () { game.setState('cutscene'); });
@@ -883,6 +901,9 @@
       FL.guard('docks', function () { if (FL.docks) FL.docks.update(dt); });
       FL.guard('gang2', function () { if (FL.gang2) FL.gang2.update(dt); });
       FL.guard('weather', function () { if (FL.weather) FL.weather.update(dt); });
+      // v8: day/night gameplay + the taxi shift (each guarded, like the rest).
+      FL.guard('daynight-v8', function () { if (FL.daynight) FL.daynight.update(dt); });
+      FL.guard('taxi', function () { if (FL.taxi) FL.taxi.update(dt); });
       FL.guard('particles', function () { FL.particles.update(dt); });
       FL.guard('audio', function () { FL.audio.radioUpdate(dt); });
       // Autosave every 60 s.
@@ -954,6 +975,10 @@
     if (FL.docks) FL.docks.init(game.scene, game);
     if (FL.gang2) FL.gang2.init(game.scene, game);
     if (FL.weather) FL.weather.init(game.scene, game);
+    // v8: day/night gameplay (shop hours, night police, lamp glows) and
+    // the taxi shift (five fares, one clock).
+    if (FL.daynight) FL.daynight.init(game.scene, game);
+    if (FL.taxi) FL.taxi.init(game.scene, game);
     initInput();
     FL.hud.setLoading(0.85, 'Menyiapkan radio dan suara...');
     await sleep(30);

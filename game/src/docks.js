@@ -15,6 +15,7 @@
     craneJib: null, craneHook: null, craneT: 0,
     ship: null, shipT: 0,
     workers: [], crates: [], collected: 0,
+    fishermen: [], // v8: two NPCs who walk the pier with fishing rods
     padLights: [], padT: 0,
     placed: { warehouses: 0, containers: 0, crates: 0 },
   };
@@ -206,6 +207,53 @@
     });
   }
 
+  // --- Fishermen (v8): two NPCs who walk the pier with fishing rods ---
+  // They stroll the quay edge (z ~269) from end to end, pausing every few
+  // seconds to face the water and cast (a small splash particle).
+  function buildFishermen() {
+    var spots = [{ x: -200, z: 269 }, { x: 160, z: 269 }];
+    spots.forEach(function (spot) {
+      if (FL.city.isBlocked(spot.x, spot.z, 1)) return;
+      var g = FL.makeHumanoid({ skin: 0xb87a52, shirt: 0x2d7ac2, pants: 0x3a2a1a, hair: 0x8a6a2a });
+      // A fishing rod: a thin pole held over the shoulder.
+      var rod = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 2.6, 4),
+        new THREE.MeshStandardMaterial({ color: 0x6a4a2a, roughness: 0.9 }));
+      rod.position.set(0.5, 1.6, 0);
+      rod.rotation.z = -0.9;
+      g.add(rod);
+      g.position.set(spot.x, 0, spot.z);
+      D.scene.add(g);
+      D.fishermen.push({
+        g: g, animT: Math.random() * 10,
+        dir: Math.random() < 0.5 ? 1 : -1, speed: 1.2,
+        minX: -280, maxX: 280, z: 269, castT: FL.rand(4, 10),
+      });
+    });
+  }
+  function updateFishermen(dt) {
+    D.fishermen.forEach(function (f) {
+      f.animT += dt;
+      f.castT -= dt;
+      if (f.castT <= 0) {
+        // Pause to cast: face the water (south, +z) and splash.
+        f.castT = FL.rand(6, 14);
+        f.g.rotation.y = 0;
+        f.g.userData.setPose('idle', f.animT, 0);
+        FL.particles.spawn(f.g.position.x, 0.4, f.g.position.z + 3,
+          { color: 0xdfe9f5, size: 0.5, life: 0.5, vy: 1, spread: 1 });
+        return;
+      }
+      var nx = f.g.position.x + f.dir * f.speed * dt;
+      if (nx > f.maxX) { nx = f.maxX; f.dir = -1; }
+      if (nx < f.minX) { nx = f.minX; f.dir = 1; }
+      var res = FL.city.resolveCircle(nx, f.z, 0.5);
+      f.g.position.x = res.x;
+      f.g.position.z = res.z;
+      f.g.rotation.y = f.dir > 0 ? Math.PI / 2 : -Math.PI / 2;
+      f.g.userData.setPose('walk', f.animT, 0.4);
+    });
+  }
+
   // --- Island helipad (the helicopter's home) ---
   function buildHelipad() {
     var pad = new THREE.Mesh(new THREE.CircleGeometry(7, 24),
@@ -294,6 +342,7 @@
     buildShip();
     buildContainers();
     buildWorkers();
+    buildFishermen();
     buildHelipad();
     buildCrates();
   };
@@ -317,6 +366,7 @@
     var glow = 1.4 + Math.sin(D.padT * 2.5) * 0.8;
     D.padLights.forEach(function (lamp) { lamp.material.emissiveIntensity = glow; });
     updateWorkers(dt);
+    updateFishermen(dt);
     updateCrates();
   };
 })();

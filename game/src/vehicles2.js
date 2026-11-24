@@ -10,7 +10,7 @@
   var FL = window.FL;
   var THREE = window.THREE;
 
-  var V2 = { scene: null, game: null, helis: [], boats: [], wheelieT: 0, wheeliePay: 0 };
+  var V2 = { scene: null, game: null, helis: [], boats: [], wheelieT: 0, wheeliePay: 0, hornCooldown: 0 };
   FL.vehicles2 = V2;
 
   // Shared box helper (local to this file — same shape as the entities one,
@@ -322,6 +322,28 @@
     }
   }
 
+  // --- Helicopter horn (v8) ---
+  // KeyV while flying the helicopter: a two-tone horn blast + a visible
+  // pulse ring of particles under the heli (a sound ring, not a weapon).
+  // Cooldown 0.8 s so holding V honks in a steady rhythm instead of
+  // every frame. (KeyH is the controls overlay, KeyG throws grenades —
+  // V was the free key.)
+  function updateHeliHorn(dt) {
+    V2.hornCooldown = Math.max(0, V2.hornCooldown - dt);
+    var p = V2.game.player;
+    if (!p.inCar || !p.vehicle || !p.vehicle.isHeli) return;
+    if (!V2.game.keys['KeyV'] || V2.hornCooldown > 0) return;
+    V2.hornCooldown = 0.8;
+    FL.audio.horn();
+    var hx = p.vehicle.group.position.x, hz = p.vehicle.group.position.z;
+    var hy = p.vehicle.group.position.y;
+    for (var i = 0; i < 10; i++) {
+      var a = (i / 10) * Math.PI * 2;
+      FL.particles.spawn(hx + Math.cos(a) * 5, hy + 0.5, hz + Math.sin(a) * 5,
+        { color: 0x2de8ff, size: 0.6, life: 0.6, vy: 0.5, spread: 1 });
+    }
+  }
+
   // --- Init / per-frame update ---
   FL.vehicles2.init = function (scene, game) {
     V2.scene = scene;
@@ -354,5 +376,6 @@
       h.group.userData.rotor.rotation.y += h.rotorSpeed * dt;
     });
     updateWheelie(dt);
+    updateHeliHorn(dt);
   };
 })();

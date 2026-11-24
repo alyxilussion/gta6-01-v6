@@ -1,4 +1,4 @@
-// FROSTLINE 3D — a full 3D open-world crime game (gta6-01 v6, Node 22, standard
+// FROSTLINE 3D — a full 3D open-world crime game (gta6-01 v8, Node 22, standard
 // library only). The game is this directory's game/ folder: plain static files a
 // desktop browser loads offline (game/index.html, Three.js vendored as a minified
 // file under game/vendor/, the game's own classic scripts under game/src/, no
@@ -13,6 +13,10 @@
 // output directory itself (rmSync(outDir) fails EBUSY on a mount and the run
 // fails); it only empties the directory's CONTENTS, so repeated runs stay
 // deterministic and byte-identical.
+//
+// v8: day/night gameplay (game/src/daynight.js), the taxi shift
+// (game/src/taxi.js), shotgun pickups + pellet falloff, and touch-ups to the
+// v7 files — all wired through game/src/main.js like the v7 modules.
 
 import { cpSync, existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -39,8 +43,9 @@ if (!existsSync(join(here, 'game', 'index.html'))) {
 }
 // v7: fail fast if any of the new v7 source files is missing — the game
 // loads them as plain scripts from game/src/, so a missing file would break
-// the build silently (the dossier would just omit it).
-for (const f of ['missions2.js', 'systems.js', 'vehicles2.js', 'docks.js', 'gang2.js', 'weather.js']) {
+// the build silently (the dossier would just omit it). v8 adds daynight.js
+// and taxi.js to the same check.
+for (const f of ['missions2.js', 'systems.js', 'vehicles2.js', 'docks.js', 'gang2.js', 'weather.js', 'daynight.js', 'taxi.js']) {
   if (!existsSync(join(here, 'game', 'src', f))) {
     throw new Error('game/src/' + f + ' is missing — the v7 entry would not run');
   }
@@ -70,4 +75,4 @@ writeFileSync(
   }),
 );
 
-console.log('FROSTLINE 3D v7 handed in to ' + out);
+console.log('FROSTLINE 3D v8 handed in to ' + out);

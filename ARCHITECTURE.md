@@ -84,6 +84,32 @@ procedural models/textures/audio only. Plays offline from `game/index.html`.
   lightning flashes (sun/hemi spike) + delayed thunder, rotating-slice
   exhaust puffs from traffic, and expanding shockwave rings on explosions.
 
+## v8 modules (new in this version)
+- `game/src/daynight.js` — day/night as gameplay. It reads the same clock
+  (`game.hour`) the lighting cycle in `main.js` already drives, and exposes
+  the rules other modules read: `shopOpen()` (07:00–22:00, enforced in
+  `systems.js`), `policeBoost()` (+1 car/+2 cops at night, read by
+  `world.js`), `fareMultiplier()` (1.5x at night, read by `taxi.js`). Eight
+  lamp-glow sprites fade in at dusk and out at dawn; transitions announce
+  themselves once via notifications.
+- `game/src/taxi.js` — the taxi shift: five fares against one 300-second
+  clock, combo +10% per fare, $200 shift bonus. It borrows the mission
+  marker (like the vigilante/courier jobs) and only runs when no story
+  mission is active; `main.js` routes KeyT here and falls back to the
+  one-fare job in `missions.js` if this module is absent. The HUD chip
+  (`#taxi-chip`) is updated directly by this module.
+- Shotgun depth (in `world.js`, where combat lives): pellet damage falls
+  off with distance and pellets knock humanoids back; a `shotgun` pickup
+  kind grants the M870 (handled in `main.js`'s pickup event), with three
+  fixed pickups in `world.init`. `entities.js` was deliberately left alone:
+  it holds models and vehicle physics, not combat.
+- Small v8 touches across the v7 files: an m9 crew briefing (`missions2.js`,
+  subtitle dialogue shown once per attempt), an armor vest in the shop plus
+  night closing hours (`systems.js`), a helicopter horn on KeyV
+  (`vehicles2.js`), fishermen on the Docks pier (`docks.js`), Viper radio
+  chatter (`gang2.js`), lightning striking street lamps (`weather.js`, using
+  `FL.city.lamps`), and a random 10–20% mission reward bonus (`missions.js`).
+
 ## Rules enforced
 - Fixed timestep, try/catch per subsystem, NaN/Infinity guards, spawn
   validation on the nav graph, stuck detection + auto-respawn, car flip

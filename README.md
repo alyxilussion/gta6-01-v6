@@ -95,6 +95,25 @@ eighth job:
   fog distance follow the state. Traffic puffs exhaust, and every
   explosion throws an expanding shockwave ring.
 
+**v8 systems:**
+
+- **Day/night gameplay** — the clock now matters: Ammu-Nation and Dex's
+  Garage close at night (open 07:00–22:00), police patrols thicken after
+  dark, taxi fares pay 50% extra at night, and street-lamp glows fade in
+  at dusk.
+- **Taxi shift** — press T for a full shift: five consecutive fares
+  against one 300-second clock, with a combo bonus that grows per fare
+  (+10% per fare) and a $200 bonus for finishing all five. The HUD chip
+  shows the fare count, the time left and the money earned.
+- **Shotgun pickups** — three free M870 shotguns are hidden around the
+  city (stadium gate, northwest intersection, Docks warehouse row).
+  Shotgun pellets now lose damage with distance and knock enemies back.
+- **More life** — the heist (m9) opens with a crew briefing, the Vipers
+  chatter on the radio while they attack, lightning can strike a street
+  lamp, fishermen walk the Docks pier, the helicopter has a horn (V), and
+  Ammu-Nation sells an armor vest ($500) that absorbs 80% of damage.
+  Mission rewards now pay a random 10–20% bonus.
+
 ## Controls
 
 | Key | Action |
@@ -117,6 +136,8 @@ eighth job:
 | U | Courier delivery |
 | X | Descend (helicopter) |
 | Shift+W | Wheelie (motorbike) |
+| T | Taxi shift (5 fares, 300 s) |
+| V | Helicopter horn (in a helicopter) |
 
 ## Run it
 
@@ -147,6 +168,8 @@ the running game.
 - `game/src/docks.js` — v7: The Docks district (warehouses, crane, ship).
 - `game/src/gang2.js` — v7: The Vipers gang + the Seth Vane boss fight.
 - `game/src/weather.js` — v7: dynamic weather, lightning, exhaust, shockwaves.
+- `game/src/daynight.js` — v8: day/night gameplay (shop hours, night police, lamp glows).
+- `game/src/taxi.js` — v8: the taxi shift (five fares, one clock, combo bonus).
 - `game/src/audio.js` — synthesized WebAudio: engines, sirens, effects, radio.
 - `game/src/hud.js` — HUD, minimap, full-screen map, menus.
 - `game/src/main.js` — game loop, screens, wanted heat, saves, boot.
